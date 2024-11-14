@@ -17,8 +17,13 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { createAccount, signInUser } from "@/lib/actions/user.actions";
+import {
+  createAccount,
+  signInUser,
+  creatGuestSession,
+} from "@/lib/actions/user.actions";
 import OtpModal from "@/components/OTPModal";
+import { useRouter } from "next/navigation";
 
 type FormType = "sign-in" | "sign-up";
 
@@ -33,6 +38,7 @@ const authFormSchema = (formType: FormType) => {
 };
 
 const AuthForm = ({ type }: { type: FormType }) => {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [accountId, setAccountId] = useState(null);
@@ -65,6 +71,11 @@ const AuthForm = ({ type }: { type: FormType }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const loginAsGuest = async () => {
+    const { sessionId } = await creatGuestSession();
+    if (sessionId) router.push("/");
   };
 
   return (
@@ -157,7 +168,17 @@ const AuthForm = ({ type }: { type: FormType }) => {
         </form>
       </Form>
 
-      {accountId && (
+      {/* button to log in as guest */}
+      {type === "sign-in" && (
+        <Button
+          className="form-submit-button mt-10"
+          onClick={() => loginAsGuest()}
+        >
+          Log in as Guest
+        </Button>
+      )}
+
+      {accountId && form.getValues("email") !== "guest@guest.com" && (
         <OtpModal email={form.getValues("email")} accountId={accountId} />
       )}
     </>

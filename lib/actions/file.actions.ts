@@ -198,6 +198,7 @@ export async function getTotalSpaceUsed() {
   try {
     const { databases } = await createSessionClient();
     const currentUser = await getCurrentUser();
+
     if (!currentUser) throw new Error("User is not authenticated.");
 
     const files = await databases.listDocuments(

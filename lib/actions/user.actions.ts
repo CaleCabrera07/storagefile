@@ -94,24 +94,29 @@ export const verifySecret = async ({
 };
 
 // Guest session
-// export const creatGuestSession = async () => {
-//   const { account } = await createAdminClient();
+export const creatGuestSession = async () => {
+  const { account } = await createAdminClient();
+  const existingUser = await getUserByEmail("guest@guest.com");
 
-//   try {
-//     const guestSession = await account.createAnonymousSession();
-//     (await cookies()).set("appwrite-session", guestSession.secret, {
-//       path: "/",
-//       httpOnly: true,
-//       sameSite: "strict",
-//       secure: true,
-//     });
+  try {
+    const guestSession = await account.createEmailPasswordSession(
+      "guest@guest.com",
+      "guestguest"
+    );
 
-//     return parseStringify({ sessionId: guestSession.$id });
-//   } catch (error) {
-//     console.log(error); // Failure
-//     throw new Error("Failed to create guest session");
-//   }
-// };
+    (await cookies()).set("appwrite-session", guestSession.secret, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "strict",
+      secure: true,
+    });
+
+    return { sessionId: guestSession.$id, accountId: existingUser?.accountId };
+  } catch (error) {
+    console.log(error); // Failure
+    throw new Error("Failed to create guest session");
+  }
+};
 
 export const getCurrentUser = async () => {
   try {
@@ -149,11 +154,6 @@ export const signOutUser = async () => {
 export const signInUser = async ({ email }: { email: string }) => {
   try {
     const existingUser = await getUserByEmail(email);
-
-    // if email is guest@guest.com, does not send OTP and access to the app
-    if (existingUser && email === "guest@guest.com") {
-      return parseStringify({ accountId: existingUser.accountId });
-    }
 
     // User exists, send OTP
     if (existingUser) {
